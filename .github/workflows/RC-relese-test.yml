@@ -1,0 +1,45 @@
+name: Publish Release Candidate
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'The version you want to release.'
+        default: 'Ex: 3.0.0'
+        required: true # In order to make a release, we need to input the version number
+
+env:
+  REPO_NAME: "${{ github.event.repository.name }}"
+  REPO_OWNER: tandemdiabetes
+  ARTIFACT_VERSION: ${{ github.event.inputs.version }}-RC.${{ github.run_number }}
+  VERSIONFILE_PATH: src/Api/appsettings.json
+  CHART_DIR: "./.helm/"
+  API_CHART_NAME: "cloud-support-user-service"
+  API_DOCKERFILE_PATH: ./src/Api/Dockerfile
+  FUNCTION_CHART_NAME: "cloud-support-user-function"
+  FUNCTION_DOCKERFILE_PATH: ./src/FunctionApp/Dockerfile
+  FUNCTION_ARTIFACT_NAME: cloud-support-user-function
+
+
+jobs:
+  publish-release-artifacts:
+    name: "Build and publish release candidate artifacts"
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create (or check out) the release branch
+        shell: bash #  checks to see if the release branch exists before creating it
+        run: |
+          if git rev-parse --verify release/${{ github.event.inputs.version }} > /dev/null 2>&1; then 
+           git checkout release/${{ github.event.inputs.version }};
+          else
+            git checkout -b release/${{ github.event.inputs.version }};
+            git config user.name "GitHub Actions"
+            git config user.email githubactions@tandemdiabetes.com
+            git push origin release/${{ github.event.inputs.version }}
+          fi
