@@ -1,0 +1,46 @@
+name: Publish Release
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+on:
+  workflow_dispatch:
+
+env:
+  REPO_NAME: "${{ github.event.repository.name }}"
+  REPO_OWNER: tandemdiabetes
+  DOCKERFILE_PATH: ./src/Api/Dockerfile
+  CHART_DIR: "./.helm/"
+  API_CHART_NAME: "cloud-support-user-service"
+  FUNCTION_CHART_NAME: "cloud-support-user-function"
+  FUNCTION_ARTIFACT_NAME: cloud-support-user-function
+  VERSIONFILE_PATH: src/Api/appsettings.json
+
+jobs:
+  release:
+    name: Publish new release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Release SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Extract RC version and Release version from tag name
+        shell: bash
+        run: |
+          # Extract the tag name from GitHub context
+          TAG_NAME="${GITHUB_REF##*/}"
+
+          # Assign the full tag name as RC_VERSION
+          RC_VERSION="$TAG_NAME"
+          echo "RC_VERSION=$RC_VERSION" >> $GITHUB_ENV
+
+          # Extract the Release version (part before '-')
+          RELEASE_VERSION="${TAG_NAME%%-*}"
+          echo "RELEASE_VERSION=$RELEASE_VERSION" >> $GITHUB_ENV
+
+          echo "Extracted RC Version: $RC_VERSION"
+          echo "Extracted Release Version: $RELEASE_VERSION"
