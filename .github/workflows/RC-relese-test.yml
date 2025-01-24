@@ -36,10 +36,16 @@ jobs:
         shell: bash #  checks to see if the release branch exists before creating it
         run: |
           if git rev-parse --verify release/${{ github.event.inputs.version }} > /dev/null 2>&1; then 
-           git checkout release/${{ github.event.inputs.version }};
+            git checkout release/${{ github.event.inputs.version }};
           else
             git checkout -b release/${{ github.event.inputs.version }};
-            git config user.name "GitHub Actions"
-            git config user.email githubactions@tandemdiabetes.com
-            git push origin release/${{ github.event.inputs.version }}
           fi
+          
+          git config user.name "GitHub Actions"
+          git config user.email githubactions@tandemdiabetes.com
+
+          # Ensure local branch is up-to-date with remote
+          git pull --rebase origin release/${{ github.event.inputs.version }} || true
+
+          # Push the local branch to remote
+          git push origin release/${{ github.event.inputs.version }}
