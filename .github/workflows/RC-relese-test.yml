@@ -31,9 +31,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        
+      - uses: actions/checkout@v4
       - name: Create (or check out) the release branch
         shell: bash #  checks to see if the release branch exists before creating it
         run: |
